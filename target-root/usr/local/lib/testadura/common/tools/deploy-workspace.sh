@@ -188,20 +188,128 @@ set -euo pipefail
         done
     }
 
+    __link_executables()
+    {
+        local root_dir="$DEST_ROOT/usr/local/lib/testadura"
+        local bin_dir="$DEST_ROOT/usr/local/bin"
+
+        [[ -d "$root_dir" ]] || return 0
+
+        saystart "Creating symlinks in $bin_dir for executables under $root_dir" --show=symbol
+
+        # Ensure bin directory exists
+        if [[ $FLAG_DRYRUN == 0 ]]; then
+            install -d "$bin_dir"
+        else
+            sayinfo "Would ensure directory exists: $bin_dir"
+        fi
+
+        # Recursively find executable files, but EXCLUDE templates/
+        find "$root_dir" \
+            -path "$root_dir/templates" -prune -o \
+            -type f -perm -111 -print |
+        while IFS= read -r f; do
+
+            # f example:
+            #   /usr/local/lib/testadura/common/tools/create-workspace.sh
+
+            local rel_target base_src base_noext base link_path
+
+            # Produce a relative path for the symlink target
+            rel_target="$(realpath --relative-to="$bin_dir" "$f")"
+
+            base_src="$(basename "$f")"        # e.g., create-workspace.sh
+            base_noext="${base_src%.sh}"       # e.g., create-workspace
+            base="td-$base_noext"              # e.g., td-create-workspace
+
+            link_path="$bin_dir/$base"
+
+            # Optional: skip private/internal files
+            case "$base" in
+                td-_*) continue ;;
+                td.*)  continue ;;
+            esac
+
+            if [[ $FLAG_DRYRUN == 0 ]]; then
+                sayinfo "Linking $link_path -> $rel_target"
+                ln -sfn "$rel_target" "$link_path"
+            else
+                sayinfo "Would link $link_path -> $rel_target"
+            fi
+
+        done
+
+        sayend "Symlink creation complete."
+    }
+
+   __unlink_executables()
+    {
+        local bin_dir="$DEST_ROOT/usr/local/bin"
+        local root_dir="$DEST_ROOT/usr/local/lib/testadura"
+
+        [[ -d "$bin_dir" ]] || return 0
+
+        saystart "Removing symlinks in $bin_dir pointing into Testadura" --show=symbol
+
+        local link target resolved
+
+        for link in "$bin_dir"/td-*; do
+            [[ -L "$link" ]] || continue
+
+            target="$(readlink "$link")"
+
+            # Resolve to absolute path
+            if [[ "$target" == /* ]]; then
+                resolved="$target"
+            else
+                resolved="$(realpath "$bin_dir/$target")"
+            fi
+
+            # Does this link belong to Testadura?
+            case "$resolved" in
+                "$root_dir"/*)
+                    saywarning "Removing symlink $link -> $resolved"
+                    if [[ $FLAG_DRYRUN == 0 ]]; then
+                        rm -f "$link"
+                    else
+                        sayinfo "Would remove $link"
+                    fi
+                    ;;
+                *)
+                    continue
+                    ;;
+            esac
+        done
+
+        sayend "Symlink cleanup complete."
+    }
+
 # --- main() must be the last function in the script -------------------------
-    __sample(){
+    showarguments() 
+    {
         printf "Script          : %s\n" "$SCRIPT_NAME"
         printf "Script dir      : %s\n" "$SCRIPT_DIR"
-        printf "Verbose         : %s\n" "${FLAG_VERBOSE:-0}"
-        printf "Config file     : %s\n" "${VAL_CONFIG:-<none>}"
-        printf "Mode            : %s\n" "${ENUM_MODE:-<not set>}"
+
+        printf -- "Arguments / Flags:\n"
+
+        local entry varname
+        for entry in "${ARGS_SPEC[@]}"; do
+            # Split the spec into fields
+            IFS='|' read -r name short type varname help choices <<< "$entry"
+
+            # Skip empty or malformed entries
+            [[ -z "$varname" ]] && continue
+
+            # Use indirect expansion to get the variable value
+            local value="${!varname:-<unset>}"
+
+            printf "  %-15s = %s\n" "$varname" "$value"
+        done
+
+        # Optional: print other environment metadata
         printf "Run mode        : %s\n" "$RUN_MODE"
         printf "COMMON_LIB      : %s\n" "$COMMON_LIB"
         printf "TD_ROOT         : %s\n" "$TD_ROOT"
-        printf "FLAG_UNDEPLOY   : %s\n" "${FLAG_UNDEPLOY:-0}"
-        printf "FLAG_DRYRUN     : %s\n" "${FLAG_DRYRUN:-0}"
-        printf "SRC_ROOT        : %s\n" "${SRC_ROOT:-<not set>}"
-        printf "DEST_ROOT       : %s\n" "${DEST_ROOT:-<not set>}"
     }
 
     main() {
@@ -210,12 +318,14 @@ set -euo pipefail
         DEST_ROOT="${DEST_ROOT:-"/"}"
         FLAG_DRYRUN="${FLAG_DRYRUN:-0}"
 
-        __sample
+        showarguments
 
         if [[ "${FLAG_UNDEPLOY:-0}" -eq 0 ]]; then
             __deploy
+            __link_executables
         else
             __undeploy
+            __unlink_executables
         fi
     }
 
