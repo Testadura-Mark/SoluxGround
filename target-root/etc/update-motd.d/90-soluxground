@@ -1,0 +1,58 @@
+#!/bin/bash
+source ../../usr/local/lib/testadura/common/default-colors.sh
+source ../../usr/local/lib/testadura/common/version.sh
+
+# Default gateway (overall)
+GW=$(ip route show default 2>/dev/null | awk '/^default/ {print $3; exit}')
+DNS=$(resolvectl status 2>/dev/null \
+      | awk -F': ' '/DNS Servers/ {print $2}' \
+      | tr ' ' '\n' | sort -u | xargs)
+[ -n "$DNS" ] || DNS=$(awk '/^nameserver/ {print $2}' /etc/resolv.conf | xargs)
+
+UPTIME=$(uptime -p | sed 's/up //')
+MEM_USED=$(free -h | awk '/^Mem:/ {print $3 "/" $2}')
+DISK_USED=$(df -h / | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
+LOADAVG=$(awk '{print $1", "$2", "$3}' /proc/loadavg)
+
+STAMP="/var/lib/apt/periodic/update-success-stamp"
+if [[ -f $STAMP ]]; then
+    last_update=$(date -r "$STAMP" +%s)
+    now=$(date +%s)
+    days=$(( (now - last_update) / 86400 ))
+    formatted_date=$(date +"%a, %d %b %Y %H:%M" -r "$STAMP")
+    LAST_UPDATE="$formatted_date ($days day$([[ $days -ne 1 ]] && echo s) ago)"
+else
+    LAST_UPDATE="Never"
+    ((days=9999))
+fi
+
+# Theme
+ttl=$BOLD_YELLOW
+lbl=$BOLD_YELLOW
+txt=$BOLD_SILVER
+dsc=$WHITE
+rst=$RESET
+
+printf "=========================================================================================\n"
+printf " ${ttl}Soluxground $SOLUXGROUND_VERSION $rst\n\n"
+printf " ${lbl}Versiondate :${rst} %s\n" "${SOLUXGROUND_VERSION_DATE}"
+printf "\n"
+printf " © 2025 Mark Fieten — Testadura Consultancy"
+printf "\nLicensed under the Testadura Non-Commercial License (TD-NC) v1.0.\n"
+printf "\n----------------------------------------------------------------------------------------\n"
+printf "\n${lbl}SoluxGround${txt} is a small, powerful Bash framework designed for system engineers,
+developers, automation builders, and anyone who wants clean, structured, reliable
+shell scripts — without the usual mess or over-engineered tooling.
+
+It provides:
+
+- A predictable bootstrap lifecycle  
+- Robust argument parsing  
+- Clear, styled UI output  
+- Practical helpers for deployment and file management  
+- A consistent template system for building new scripts  
+
+SoluxGround is built on decades of practical scripting experience, with the simple
+mission of making Bash *civilized*.{rst}"
+printf "\n"
+printf "======================================================================================\n"
