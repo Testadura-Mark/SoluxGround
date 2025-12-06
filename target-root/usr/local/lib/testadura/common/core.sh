@@ -4,8 +4,9 @@
 # ----------------------------------------------------------
 # Purpose : Common Bash helper one-liners for reusable scripts
 # Author  : Mark Fieten
-# Version : 1.1 (2025-11-09)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # ----------------------------------------------------------
 # Description :
 #   Source this file to get small, focused utilities:
@@ -17,6 +18,14 @@
 #   - Version/OS helpers
 #   - Misc utilities
 # ==========================================================
+
+# --- Script metadata ----------------------------------------------------------
+    SCRIPT_FILE="${BASH_SOURCE[0]}"
+    SCRIPT_NAME=""
+    SCRIPT_DESC="Short description of what this script does."
+    SCRIPT_VERSION="1.0"
+    SCRIPT_VERSION_STATUS="alpha"
+    SCRIPT_BUILD="20250110"
 
 # --- Internals ---------------------------------------------------------------
   # _sh_err -- print an error message to stderr (internal, minimal).
@@ -125,6 +134,13 @@
   # version_ge -- return 0 if version A >= version B (natural sort -V).
   # usage: version_ge "1.4" "1.3"
   version_ge(){ [[ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" == "$2" ]]; }
+
+  show_version() {
+    justsay "SoluxGround Framework : $SOLUXGROUND_VERSION ($SOLUXGROUND_VERSION_DATE)"
+    justsay "Script                 : ${SCRIPT_VERSION:-<none>} ${SCRIPT_VERSION_STATUS:-}"
+    [[ -n "$SCRIPT_VERSION_DATE" ]] && justsay "Script Date            : $SCRIPT_VERSION_DATE"
+}
+
 
 # --- Misc Utilities ----------------------------------------------------------
   # join_by -- join arguments with a separator.

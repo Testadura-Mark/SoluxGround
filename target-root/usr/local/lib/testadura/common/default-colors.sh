@@ -4,8 +4,9 @@
 # ----------------------------------------------------------
 # Purpose : Text color codes for bash scripts
 # Author  : Mark <mark@solidground.local>
-# Version : 1.0 (2025-10-28)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # ----------------------------------------------------------
 # Usage:
 #   printf "%sItalic Yellow%s\n" "$ITALIC_YELLOW" "$RESET"

@@ -4,8 +4,9 @@
 # ----------------------------------------------------------
 # Purpose : Centralized styles for cli bash scripts
 # Author  : Mark <mark@solidground.local>
-# Version : 1.0 (2025-11-05)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # ----------------------------------------------------------
 # Usage:
 #   printf "%s%s %s%s\n" "$CLR_INFO" "$LBL_INFO" /

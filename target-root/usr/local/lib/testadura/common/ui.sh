@@ -4,13 +4,21 @@
 # ----------------------------------------------------------
 # Purpose :
 # Author  : Mark Fieten
-# Version : 1.0 (2025-10-31)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # ----------------------------------------------------------
 # Description :
 #   User interaction functions. 
-#  Say
 # ==========================================================
+
+# --- Script metadata ----------------------------------------------------------
+    SCRIPT_FILE="${BASH_SOURCE[0]}"
+    SCRIPT_NAME=""
+    SCRIPT_DESC="Short description of what this script does."
+    SCRIPT_VERSION="1.0"
+    SCRIPT_VERSION_STATUS="alpha"
+    SCRIPT_BUILD="20250110"
 
 # --- Overrides ----------------------------------------------------------
   # _sh_err override: use say --type FAIL if available

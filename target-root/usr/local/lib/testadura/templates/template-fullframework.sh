@@ -4,8 +4,9 @@
 # -------------------------------------------------------------------------------
 # Purpose : Generic script template
 # Author  : Mark Fieten
-# Version : 1.0 (2025-11-20)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # -------------------------------------------------------------------------------
 # Description :
 #   Includes boilerplate  for a generic Testadura script.
@@ -27,6 +28,9 @@ set -euo pipefail
     SCRIPT_FILE="${BASH_SOURCE[0]}"
     SCRIPT_NAME=""
     SCRIPT_DESC="Short description of what this script does."
+    SCRIPT_VERSION="1.0"
+    SCRIPT_VERSION_STATUS="alpha"
+    SCRIPT_BUILD="20250110"
 
     # Determine the directory where this script lives
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -86,6 +90,7 @@ set -euo pipefail
     # ------------------------------------------------------------------------
     ARGS_SPEC=(
         "dryrun|d|flag|FLAG_DRYRUN|Dry run (no actual work)|"
+        "version|v|action|show_version|Show version information"
     )
 
     SCRIPT_EXAMPLES=(

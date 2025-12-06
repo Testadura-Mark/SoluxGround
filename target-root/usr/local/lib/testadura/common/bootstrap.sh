@@ -4,8 +4,9 @@
 # -------------------------------------------------------------------------------
 # Purpose : Bootstrapper for Testadura scripts
 # Author  : Mark Fieten
-# Version : 1.1 (2025-11-20)
-# License : Internal use only
+# 
+# © 2025 Mark Fieten — Testadura Consultancy
+# Licensed under the Testadura Non-Commercial License (TD-NC) v1.0.
 # -------------------------------------------------------------------------------
 # Description :
 # Minimal bootstrap: config -> args -> main
@@ -15,7 +16,14 @@
 # ===============================================================================
 
 set -euo pipefail
-
+# --- Script metadata ----------------------------------------------------------
+    SCRIPT_FILE="${BASH_SOURCE[0]}"
+    SCRIPT_NAME=""
+    SCRIPT_DESC="Short description of what this script does."
+    SCRIPT_VERSION="1.0"
+    SCRIPT_VERSION_STATUS="alpha"
+    SCRIPT_BUILD="20250110"
+    
 # --- Argument parsing functions -----------------------------------------------
 
     # Split "name|short|type|var|help|choices" into fields
