@@ -39,6 +39,7 @@ set -euo pipefail
     TD_ROOT="${TD_ROOT:-/usr/local/lib/testadura}"
     COMMON_LIB="${COMMON_LIB:-$TD_ROOT/common}"
     COMMON_LIB_DEV="$( getent passwd "${SUDO_USER:-$(id -un)}" | cut -d: -f6)/dev/soluxground/target-root/usr/local/lib/testadura/common"
+    USER_HOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"
 
 # --- Using / imports ----------------------------------------------------------
     # Edit this list per script, like a “using” section in C#.
@@ -137,41 +138,97 @@ set -euo pipefail
 
 
 # --- local script functions -------------------------------------------------
+    # Default permission rules
+    PERMISSION_RULES=(
+    "/usr/local/bin|755|755|User entry points"
+    "/usr/local/sbin|755|755|Admin entry points"
+    "/etc/update-motd.d|755|755|Executed by system"
+    "/usr/local/lib/testadura|644|755|Implementation only"
+    "/etc/testadura|640|750|Configuration"
+    "/var/lib/testadura|600|700|Application state"
+    )
+
+    __perm_resolve() {
+        local abs_rel="$1"   # e.g. "/usr/local/sbin/td-foo"
+        local kind="$2"      # "file" or "dir"
+
+        local best_prefix=""
+        local best_file="644"
+        local best_dir="755"
+
+        local entry prefix file_mode dir_mode desc
+
+        for entry in "${PERMISSION_RULES[@]}"; do
+            IFS='|' read -r prefix file_mode dir_mode desc <<< "$entry"
+
+            if [[ "$abs_rel" == "$prefix" || "$abs_rel" == "$prefix/"* ]]; then
+                if [[ ${#prefix} -gt ${#best_prefix} ]]; then
+                    best_prefix="$prefix"
+                    best_file="$file_mode"
+                    best_dir="$dir_mode"
+                fi
+            fi
+        done
+
+        if [[ "$kind" == "dir" ]]; then
+            echo "$best_dir"
+        else
+            echo "$best_file"
+        fi
+    }
+
     __deploy()
     {
-        say STRT "Starting deployment from $SRC_ROOT to $DEST_ROOT" --show=symbol
+        SRC_ROOT="${SRC_ROOT%/}"
+        DEST_ROOT="${DEST_ROOT%/}"
+
+        saystart "Starting deployment from $SRC_ROOT to ${DEST_ROOT:-/}"
 
         find "$SRC_ROOT" -type f |
         while IFS= read -r file; do
 
-        rel="${file#$SRC_ROOT/}"
-        name="$(basename "$file")"
-        perms=$(stat -c "%a" "$file")
-        dst="$DEST_ROOT$rel"
+            rel="${file#"$SRC_ROOT"/}"
 
-        say "$rel  $name $perms $dst"
-        # Skip top-level files, hidden dirs, private dirs
-        if [[ "$rel" != */* || "$name" == _* || "$name" == *.old || \
+            if [[ "$rel" == "$file" || "$rel" == /* ]]; then
+                sayerror "Bad rel path: file='$file' SRC_ROOT='$SRC_ROOT' rel='$rel'"
+                continue
+            fi
+
+            name="$(basename "$file")"
+            abs_rel="/$rel"
+
+            perms="$(__perm_resolve "$abs_rel" "file")"
+            dst="${DEST_ROOT:-}/$rel"
+
+            sayinfo "$name --> $dst $perms"
+
+            # Skip top-level files, hidden dirs, private dirs
+            if [[ "$rel" != */* || "$name" == _* || "$name" == *.old || \
                 "$rel" == .*/* || "$rel" == _*/* || \
                 "$rel" == */.*/* || "$rel" == */_*/* ]]; then
-            continue
-        fi
-
-        if [[ ! -e "$dst" || "$file" -nt "$dst" ]]; then
-            say "Deploying $SRC_ROOT/$rel to $dst with permissions $perms"
-            if [[ $FLAG_DRYRUN == 0 ]]; then
-                install -D -m "$perms" "$SRC_ROOT/$rel" "$dst"
-            else
-                sayinfo "Would have installed $SRC_ROOT/$rel --> $dst, with $perms permissions"
+                continue
             fi
-        else
-            say "Skipping $rel; destination is up-to-date."
-        fi
+
+            sayinfo "Deploying $SRC_ROOT/$rel to $dst with permissions $perms"
+
+            if [[ ! -e "$dst" || "$file" -nt "$dst" ]]; then
+                dst_dir="$(dirname "$dst")"
+                dir_mode="$(__perm_resolve "/${rel%/*}" "dir")"
+
+                if [[ $FLAG_DRYRUN == 0 ]]; then
+                    install -d -m "$dir_mode" "$dst_dir"
+                    install -m "$perms" "$SRC_ROOT/$rel" "$dst"
+                else
+                    sayinfo "Would have installed $SRC_ROOT/$rel --> $dst, with $perms permissions"
+                fi
+            else
+                saywarning "Skipping $rel; destination is up-to-date."
+            fi
 
         done
-        say END "End deployment complete." 
-    }
 
+        sayend "End deployment complete."
+    }
     __undeploy()
     {
 
@@ -325,27 +382,70 @@ set -euo pipefail
         done
     }
 
+    __getparameters() {
+        
+        # Ask if empty
+        if [[ -z "${SRC_ROOT:-}" ]]; then
+            ask --label "Workspace source root" --var SRC_ROOT --default "$USER_HOME/dev" --colorize both
+        fi
+
+        while true; do
+            # VALID -> exit loop
+            if [[ -d "$SRC_ROOT/etc" || -d "$SRC_ROOT/usr" ]]; then
+                sayinfo "Source root '$SRC_ROOT' looks valid."
+                break
+            fi
+
+            saywarning "Source root '$SRC_ROOT' doesn't look valid; should contain 'etc/' and/or 'usr/' subdirectory."
+
+           if ask_ok_redo_quit "Continue anyway?"; then
+                rc=0
+           else
+                rc=$?
+           fi
+
+           if [[ -z "${SRC_ROOT:-}" ]]; then
+                ask --label "Workspace source root" --var SRC_ROOT --default "$USER_HOME/dev" --colorize both
+           fi
+           
+           case "$rc" in
+                0)  sayinfo "Continuing"
+                    break ;;                 # OK
+                1) SRC_ROOT="" ;;            # REDO -> clear and re-ask
+                2) 
+                    saycancel "Aborting as per user request." 
+                    exit 1;;
+                3)  sayfail "Aborting (unexpected response)." 
+                    exit 1;;
+            esac
+
+            if [[ -z "${SRC_ROOT:-}" ]]; then
+                ask --label "Workspace source root" --var SRC_ROOT --default "$USER_HOME/dev" --colorize both
+            fi
+        done
+
+        DEST_ROOT="${DEST_ROOT:-/}"
+    }   
+
 
     main() {
+        need_root "$@"
         
         td_parse_args "$@"
-
-        SRC_ROOT="${SRC_ROOT:-""}"
-        DEST_ROOT="${DEST_ROOT:-"/"}"
         FLAG_DRYRUN="${FLAG_DRYRUN:-0}"   
 
         if [[ "${FLAG_VERBOSE:-0}" -eq 1 ]]; then
             __td_showarguments
         fi
 
-        need_root "$@"
-        
+        __getparameters
+                
         if [[ "${FLAG_UNDEPLOY:-0}" -eq 0 ]]; then
             __deploy
-            __link_executables
+            #__link_executables
         else
             __undeploy
-            __unlink_executables
+            #__unlink_executables
         fi
     }
 

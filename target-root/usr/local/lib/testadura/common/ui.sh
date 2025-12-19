@@ -646,28 +646,19 @@
 
           ask --label "$prompt [OK/Redo/Quit]" --default "OK" --var orq_response
 
-          # Normalize (optional but nice)
+          # Trim whitespace (left + right)
           orq_response="${orq_response#"${orq_response%%[![:space:]]*}"}"
-          value="${orq_response%"${orq_response##*[![:space:]]}"}"
+          orq_response="${orq_response%"${orq_response##*[![:space:]]}"}"
+
           local upper="${orq_response^^}"
-          #saydebug "ask_ok_redo_quit: normalized='$orq_response'"
-          #saydebug "ask_ok_redo_quit: normalized='$orq_response'"
 
           case "$upper" in
-              OK)
-                  return 0   # continue
-                  ;;
-              REDO)
-                  return 10  # signal redo
-                  ;;
-              QUIT|Q|EXIT)
-                  return 20  # signal quit
-                  ;;
-              *)
-                  return 20  # treat unknown as quit
-                  ;;
+              ""|OK|O)        return 0  ;;  # Enter defaults to OK
+              REDO|R)         return 1 ;;
+              QUIT|Q|EXIT)    return 2 ;;
+              *)              return 3 ;;
           esac
-      }
+    }
   # --- File system validations
       validate_file_exists() {
           local path="$1"

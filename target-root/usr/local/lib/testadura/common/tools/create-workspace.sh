@@ -143,27 +143,16 @@ set -euo pipefail
         local mode template_dir slug default_name default_folder default_template base
 
         mode="${ENUM_MODE:-Interactive}"
-        template_dir="${TD_ROOT}/usr/local/lib/testadura/templates"
+        template_dir="${TD_ROOT}/templates"
         default_name="Script1.sh"
         default_projectname="Project"
         sample_scriptname="Script.sh"
   
-        skip_template=0
-
-        # Ensure a sane default template if not provided
-        if [[ -d "$template_dir" ]]; then
-            TEMPLATE_SCRIPT="$(find "$template_dir" -maxdepth 1 -type f | sort | head -n 1 || true)"
-        fi
-
+         
         # --- Non-interactive AUTO mode:
             #   Only if project AND folder are both provided.  
 
             if [[ "$mode" == "Auto" && -n "${PROJECT_NAME:-}" && -n "${PROJECT_FOLDER:-}" ]]; then
-                if [[ -z "${TEMPLATE_SCRIPT:-}" || ! -f "$TEMPLATE_SCRIPT" ]]; then
-                    sayfail "No valid template script found in $template_dir and none provided explicitly."
-                    sayinfo "Skipping scriptfile creation, create one manually."
-                    return 2
-                fi
 
                 # Normalize folder to absolute path
                 if [[ "$PROJECT_FOLDER" != /* ]]; then
@@ -171,7 +160,6 @@ set -euo pipefail
                 fi
 
                 sayinfo "Mode Auto: using project $PROJECT_NAME in folder $PROJECT_FOLDER" 
-                sayinfo "Mode Auto: using template script $TEMPLATE_SCRIPT" 
                 return 0
             fi
 
@@ -189,13 +177,6 @@ set -euo pipefail
                 fi
                 
                 ask --label "Project folder " --var PROJECT_FOLDER --default "$default_folder"
-
-                ask --label "Script template " --var TEMPLATE_SCRIPT --default "$TEMPLATE_SCRIPT" --validate validate_file_exists
-
-                if [[ -z "${TEMPLATE_SCRIPT:-}" || ! -f "$TEMPLATE_SCRIPT" ]]; then
-                    sayfail "Template script ${TEMPLATE_SCRIPT:-<empty>} is not a valid file." "${TEMPLATE_SCRIPT:-<empty>}"
-                    return 2
-                fi
 
                  justsay "$PROJECT_FOLDER"
                 # Normalize folder to absolute path
@@ -221,11 +202,12 @@ set -euo pipefail
 
     }
     
+
+
     __display_summary(){
         justsay "${CLR_LABEL}--- Summary"
         justsay "${CLR_LABEL}Using project name     ${CLR_INPUT}$PROJECT_NAME" 
         justsay "${CLR_LABEL}Using project folder   ${CLR_INPUT}$PROJECT_FOLDER" 
-        justsay "${CLR_LABEL}Using template script  ${CLR_INPUT}$TEMPLATE_SCRIPT" 
      }
     
     __create_repository()
@@ -239,8 +221,9 @@ set -euo pipefail
         "target-root/usr/local/lib"
         "target-root/usr/local/sbin"
         "docs"
+        "templates"
         )
-
+        
         for d in "${DIRS[@]}"; do
             if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
                 mkdir -p "${PROJECT_FOLDER}/${d}"
@@ -250,10 +233,22 @@ set -euo pipefail
             fi
             
         done
+
+        # Copy template files
+        template_dir="${TD_ROOT}/templates"
+        if [[ -d "$template_dir" ]]; then
+            if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
+                cp -r "${template_dir}/." "$PROJECT_FOLDER/templates/"
+                sayinfo "Copied templates to ${PROJECT_FOLDER}/templates/"
+            else
+                sayinfo "Would have copied templates to ${PROJECT_FOLDER}/templates/" 
+            fi
+        else
+            saywarning "Template directory $template_dir does not exist; skipping template copy."
+        fi
     }
 
-    __create_workspace_file()
-{
+    __create_workspace_file(){
     local workspace_file="${PROJECT_FOLDER}/${PROJECT_NAME}.code-workspace"
 
      if [[ "$FLAG_DRYRUN" -eq 1 ]]; then
@@ -290,62 +285,6 @@ EOF
 
     sayinfo "Created VS Code workspace file ${workspace_file}"
 }
-
-    __copy_samplescript()
-    {
-        local src="$TEMPLATE_SCRIPT"
-        local tmpl_dir="${PROJECT_FOLDER}/templates"
-        local target_dir="${PROJECT_FOLDER}/target-root/usr/local/lib"
-        local target_script="${target_dir}/${sample_scriptname}"
-
-        # Safety checks
-        if [[ -z "$src" || ! -f "$src" ]]; then
-            sayfail "Cannot copy sample script: TEMPLATE_SCRIPT '${src:-<empty>}' is not a valid file."
-            return 1
-        fi
-
-        #
-        # Create templates directory
-        #
-        if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
-            mkdir -p "$tmpl_dir"
-            say info "Created templates directory ${tmpl_dir}"
-        else
-            say info "Would have created templates directory ${tmpl_dir}"
-        fi
-
-        #
-        # Create library directory
-        #
-        if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
-            mkdir -p "$target_dir"
-            sayinfo "Created library directory ${target_dir}"
-        else
-            sayinfo "Would have created library directory ${target_dir}" 
-        fi
-
-        #
-        # Copy original template into templates/
-        #
-        if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
-            cp "$src" "$tmpl_dir/"
-            sayinfo "Copied template script into ${tmpl_dir}" 
-        else
-            sayinfo "Would have copied template script into ${tmpl_dir}" 
-        fi
-
-        #
-        # Install renamed script into target-root/usr/local/lib/
-        #
-        if [[ "$FLAG_DRYRUN" -eq 0 ]]; then
-            cp "$src" "$target_script"
-            sayinfo "Installed script as ${target_script}" 
-        else
-            sayinfo "Would have installed script as ${target_script}" 
-        fi
-
-        return 0
-    }
 
 
 # --- main() must be the last function in the script -------------------------
@@ -397,11 +336,6 @@ EOF
         # For 0 (OK) and 2 (skip template) we still create repo + workspace
         __create_repository
         __create_workspace_file
-
-        # Only when proceed==0 do we also create/copy the sample script
-        if [[ "$proceed" -eq 0 ]]; then
-            __copy_samplescript
-        fi
 
     }
 

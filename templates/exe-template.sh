@@ -29,6 +29,7 @@ set -euo pipefail
     #   TD_ROOT=/some/path COMMON_LIB=/some/path/common ./yourscript.sh
     TD_ROOT="${TD_ROOT:-/usr/local/lib/testadura}"
     COMMON_LIB="${COMMON_LIB:-$TD_ROOT/common}"
+    USER_HOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"
 
 # --- Using / imports ----------------------------------------------------------
     # Edit this list per script, like a “using” section in C#.
