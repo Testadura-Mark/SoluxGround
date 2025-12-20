@@ -34,7 +34,7 @@ set -euo pipefail
     #   TD_ROOT=/some/path COMMON_LIB=/some/path/common ./yourscript.sh
     TD_ROOT="${TD_ROOT:-/usr/local/lib/testadura}"
     COMMON_LIB="${COMMON_LIB:-$TD_ROOT/common}"
-    COMMON_LIB_DEV="$( getent passwd "${SUDO_USER:-$(id -un)}" | cut -d: -f6)/dev/soluxground/target-root/usr/local/lib/testadura/common"
+    COMMON_LIB_DEV="$( getent passwd "${SUDO_USER:-$(id -un)}" | cut -d: -f6)/dev/solidgroundux/target-root/usr/local/lib/testadura/common"
 
 # --- Using / imports ----------------------------------------------------------
     # Edit this list per script, like a “using” section in C#.
@@ -168,12 +168,10 @@ set -euo pipefail
                 
                 ask --label "Project folder " --var PROJECT_FOLDER --default "$default_folder"
 
-                 justsay "$PROJECT_FOLDER"
                 # Normalize folder to absolute path
                 if [[ "$PROJECT_FOLDER" != /* ]]; then
                    PROJECT_FOLDER="$(pwd)/$PROJECT_FOLDER"
                 fi
-                justsay "$PROJECT_FOLDER"
 
                 __display_summary
                 if ask_ok_redo_quit "Proceed with these settings?"; then
@@ -259,7 +257,6 @@ set -euo pipefail
             "path": "target-root/usr/local/lib/${SCRIPT_NAME}.sh"
         }
     ],
-    "settings": {
         "files.exclude": {
             "**/.git": true,
             "**/.DS_Store": true

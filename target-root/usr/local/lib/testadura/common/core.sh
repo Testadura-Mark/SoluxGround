@@ -140,8 +140,8 @@
   version_ge(){ [[ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" == "$2" ]]; }
 
   show_version() {
-    justsay "SoluxGround Framework : $SOLUXGROUND_VERSION ($SOLUXGROUND_VERSION_DATE)"
-    justsay "Script                 : ${SCRIPT_VERSION:-<none>} ${SCRIPT_VERSION_STATUS:-}"
+    justsay "SolidgroundUX : $SGND_VERSION ($SGND_VERSION_DATE)"
+    justsay "Script        : ${SCRIPT_VERSION:-<none>} ${SCRIPT_VERSION_STATUS:-}"
     [[ -n "$SCRIPT_VERSION_DATE" ]] && justsay "Script Date            : $SCRIPT_VERSION_DATE"
   }
 

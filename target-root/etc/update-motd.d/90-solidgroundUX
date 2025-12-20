@@ -34,13 +34,13 @@ dsc=$WHITE
 rst=$RESET
 
 printf "=========================================================================================\n"
-printf " ${ttl}Soluxground $SOLUXGROUND_VERSION $rst\n\n"
-printf " ${lbl}Versiondate :${rst} %s\n" "${SOLUXGROUND_VERSION_DATE}"
+printf " ${ttl}SolidgroundUX $SGND_VERSION $rst\n\n"
+printf " ${lbl}Versiondate :${rst} %s\n" "${SGND_VERSION_DATE}"
 printf "\n"
 printf " © 2025 Mark Fieten — Testadura Consultancy"
 printf "\nLicensed under the Testadura Non-Commercial License (TD-NC) v1.0.\n"
 printf "\n----------------------------------------------------------------------------------------\n"
-printf "\n${lbl}SoluxGround${txt} is a small, powerful Bash framework designed for system engineers,
+printf "\n${lbl}SolidgroundUX${txt} is a small, powerful Bash framework designed for system engineers,
 developers, automation builders, and anyone who wants clean, structured, reliable
 shell scripts — without the usual mess or over-engineered tooling.
 
@@ -52,7 +52,7 @@ It provides:
 - Practical helpers for deployment and file management  
 - A consistent template system for building new scripts  
 
-SoluxGround is built on decades of practical scripting experience, with the simple
+SolidgroundUX is built on decades of practical scripting experience, with the simple
 mission of making Bash *civilized*.{rst}"
 printf "\n"
 printf "======================================================================================\n"

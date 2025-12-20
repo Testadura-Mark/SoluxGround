@@ -1,4 +1,4 @@
-SoluxGround is a small, powerful Bash framework designed for system engineers,
+SolidgroundUX is a small, powerful Bash framework designed for system engineers,
 developers, automation builders, and anyone who wants clean, structured, reliable
 shell scripts — without the usual mess or over-engineered tooling.
 
@@ -10,7 +10,7 @@ It provides:
 - Practical helpers for deployment and file management  
 - A consistent template system for building new scripts  
 
-SoluxGround is built on decades of practical scripting experience, with the simple
+SolidgroundUX is built on decades of practical scripting experience, with the simple
 mission of making Bash *civilized*.
 
 ---
@@ -27,7 +27,7 @@ mission of making Bash *civilized*.
 
 ## 🧭 Philosophy
 
-SoluxGround was created to bring clarity, discipline, and reliability to Bash scripting.
+SolidgroundUX was created to bring clarity, discipline, and reliability to Bash scripting.
 Instead of relying on heavy toolchains or complex automation frameworks, it focuses on:
 
 - **Simplicity** — Everything is explicit, readable, and easy to follow  
@@ -84,29 +84,29 @@ The goal is simple:
 ---
 
 ## 📁 Repository Structure
-SoluxGround is organized around a `target-root` directory, which mirrors the filesystem
+SolidgroundUX is organized around a `target-root` directory, which mirrors the filesystem
 layout of the environment it will be installed into. Deployment is straightforward:
 the entire structure is copied to the target system, placing framework files under
 `/usr/local/lib/testadura` and creating executable symlinks in `/usr/local/bin`.
 
 The repository layout:
 
-- /soluxground/ (or your projectname)
-- /soluxground/LICENSE
-- /soluxground/README.md
-- /soluxground/target-root/
-- /soluxground/target-root/etc/
-- /soluxground/target-root/usr/local/lib/testadura/
-- /soluxground/target-root/common/
-- /soluxground/target-root/common/templates/
-- /soluxground/target-root/common/tools/
+- /SolidgroundUX/ (or your projectname)
+- /SolidgroundUX/LICENSE
+- /SolidgroundUX/README.md
+- /SolidgroundUX/target-root/
+- /SolidgroundUX/target-root/etc/
+- /SolidgroundUX/target-root/usr/local/lib/testadura/
+- /SolidgroundUX/target-root/common/
+- /SolidgroundUX/target-root/common/templates/
+- /SolidgroundUX/target-root/common/tools/
 
 ## 🧰 Included Tools
 
-SoluxGround ships with two key tools that streamline scripting workflows:
+SolidgroundUX ships with two key tools that streamline scripting workflows:
 
 ### **1. create-workspace.sh**
-Creates a new script workspace based on SoluxGround conventions.
+Creates a new script workspace based on SolidgroundUX conventions.
 
 It:
 - Generates a folder structure
@@ -124,7 +124,7 @@ It:
 - Preserves permissions
 - Supports dry-run mode
 - Detects updates cleanly
-- Safely installs Testadura/SoluxGround framework files
+- Safely installs Testadura/SolidgroundUX framework files
 
-This is the mechanism used to install SoluxGround or update existing deployments.
+This is the mechanism used to install SolidgroundUX or update existing deployments.
 
