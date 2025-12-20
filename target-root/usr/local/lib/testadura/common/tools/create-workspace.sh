@@ -27,7 +27,8 @@ set -euo pipefail
     SCRIPT_DESC="Create a VSCode repository."
     SCRIPT_VERSION="1.0"
     SCRIPT_VERSION_STATUS="alpha"
-    SCRIPT_BUILD="20250110"
+    SCRIPT_BUILD="20250110"    SCRIPT_DEVELOPERS="Mark Fieten"
+    SCRIPT_COMPANY="Testadura Consultancy"
 
 # --- Framework roots (explicit) ----------------------------------------------
     # Override from environment if desired:

@@ -19,10 +19,12 @@ set -euo pipefail
     SCRIPT_FILE="${BASH_SOURCE[0]}"
     SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_FILE")" && pwd)"
     SCRIPT_NAME="$(basename "$SCRIPT_FILE")"
-    SCRIPT_DESC="Short description of what this script does."
+    SCRIPT_DESC="Canonical executable template for Testadura scripts"
     SCRIPT_VERSION="1.0"
     SCRIPT_VERSION_STATUS="alpha"
-    SCRIPT_BUILD="20250110"
+    SCRIPT_BUILD="20250110"    
+    SCRIPT_DEVELOPERS="Mark Fieten"
+    SCRIPT_COMPANY="Testadura Consultancy"
 
 # --- Framework roots (explicit) ----------------------------------------------
     # Override from environment if desired:
