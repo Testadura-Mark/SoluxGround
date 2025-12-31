@@ -23,15 +23,15 @@
 set -euo pipefail
 
 # --- Script metadata ----------------------------------------------------------
-    SCRIPT_FILE="$(readlink -f "${BASH_SOURCE[0]}")"
-    SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_FILE")" && pwd)"
-    SCRIPT_BASE="$(basename -- "$SCRIPT_FILE")"
-    SCRIPT_NAME="${SCRIPT_BASE%.sh}"
-    SCRIPT_DESC="Deploy a development workspace to a target root filesystem."
-    SCRIPT_VERSION="1.0"
-    SCRIPT_BUILD="20250110"
-    SCRIPT_DEVELOPERS="Mark Fieten"
-    SCRIPT_COMPANY="Testadura Consultancy"
+    TD_SCRIPT_FILE="$(readlink -f "${BASH_SOURCE[0]}")"
+    TD_SCRIPT_DIR="$(cd -- "$(dirname -- "$TD_SCRIPT_FILE")" && pwd)"
+    TD_SCRIPT_BASE="$(basename -- "$TD_SCRIPT_FILE")"
+    TD_SCRIPT_NAME="${TD_SCRIPT_BASE%.sh}"
+    TD_SCRIPT_DESC="Deploy a development workspace to a target root filesystem."
+    TD_SCRIPT_VERSION="1.0"
+    TD_SCRIPT_BUILD="20250110"
+    TD_SCRIPT_DEVELOPERS="Mark Fieten"
+    TD_SCRIPT_COMPANY="Testadura Consultancy"
 
 # --- Framework roots (explicit) ----------------------------------------------
     # Override from environment if desired:
@@ -39,9 +39,9 @@ set -euo pipefail
     TD_FRAMEWORK_ROOT="${TD_FRAMEWORK_ROOT:-/}"
     TD_APPLICATION_ROOT="${TD_APPLICATION_ROOT:-/}"
     TD_COMMON_LIB="${TD_COMMON_LIB:-$TD_FRAMEWORK_ROOT/usr/local/lib/testadura/common}"
-    STATE_FILE="${STATE_FILE:-"$TD_APPLICATION_ROOT/var/testadura/$SCRIPT_NAME.state"}"
-    CFG_FILE="${CFG_FILE:-"$TD_APPLICATION_ROOT/etc/testadura/$SCRIPT_NAME.cfg"}"
-    USER_HOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"
+    TD_STATE_FILE="${TD_STATE_FILE:-"$TD_APPLICATION_ROOT/var/testadura/$TD_SCRIPT_NAME.state"}"
+    TD_CFG_FILE="${TD_CFG_FILE:-"$TD_APPLICATION_ROOT/etc/testadura/$TD_SCRIPT_NAME.cfg"}"
+    TD_USER_HOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"
 
 # --- Minimal fallback UI (overridden by ui.sh when sourced) -------------------
     saystart()   { printf '[STRT] %s\n' "$*" >&2; }
@@ -105,7 +105,7 @@ set -euo pipefail
     #   - -h / --help is built in, you don't need to define it here.
     #   - After parsing you can use: FLAG_VERBOSE, VAL_CONFIG, ENUM_MODE, ...
     # ------------------------------------------------------------------------
-    ARGS_SPEC=(
+    TD_ARGS_SPEC=(
         "undeploy|u|flag|FLAG_UNDEPLOY|Remove files from main root|"
         "source|s|value|SRC_ROOT|Set Source directory|"
         "target|t|value|DEST_ROOT|Set Target directory|"
@@ -113,13 +113,13 @@ set -euo pipefail
         "verbose|v|flag|FLAG_VERBOSE|Verbose output|"
     )
 
-    SCRIPT_EXAMPLES=(
+    TD_SCRIPT_EXAMPLES=(
         "Deploy using defaults:"
-        "  $SCRIPT_NAME"
+        "  $TD_SCRIPT_NAME"
         ""
         "Undeploy everything:"
-        "  $SCRIPT_NAME --undeploy"
-        "  $SCRIPT_NAME -u"
+        "  $TD_SCRIPT_NAME --undeploy"
+        "  $TD_SCRIPT_NAME -u"
     ) 
 
 
@@ -132,6 +132,7 @@ set -euo pipefail
     "/usr/local/sbin|755|755|Admin entry points"
     "/etc/update-motd.d|755|755|Executed by system"
     "/usr/local/lib/testadura|644|755|Implementation only"
+    "/usr/local/lib/testadura/common/tools|755|755|Implementation only"
     "/etc/testadura|640|750|Configuration"
     "/var/lib/testadura|600|700|Application state"
     )
@@ -341,23 +342,22 @@ set -euo pipefail
     __td_showarguments() 
     {
         
-        printf "File                : %s\n" "$SCRIPT_FILE"
-        printf "Script              : %s\n" "$SCRIPT_NAME"
-        printf "Script description  : %s\n" "$SCRIPT_DESC"
-        printf "Script dir          : %s\n" "$SCRIPT_DIR"
-        printf "Script version      : %s (build %s)\n" "$SCRIPT_VERSION" "$SCRIPT_BUILD"
-
+        printf "File                : %s\n" "$TD_SCRIPT_FILE"
+        printf "Script              : %s\n" "$TD_SCRIPT_NAME"
+        printf "Script description  : %s\n" "$TD_SCRIPT_DESC"
+        printf "Script dir          : %s\n" "$TD_SCRIPT_DIR"
+        printf "Script version      : %s (build %s)\n" "$TD_SCRIPT_VERSION" "$TD_SCRIPT_BUILD"
         printf "TD_APPLICATION_ROOT : %s\n" "${TD_APPLICATION_ROOT:-<none>}"
         printf "TD_FRAMEWORK_ROOT   : %s\n" "${TD_FRAMEWORK_ROOT:-<none>}"
         printf "TD_COMMON_LIB       : %s\n" "${TD_COMMON_LIB:-<none>}"
 
-        printf "STATE_FILE          : %s\n" "${STATE_FILE:-<none>}"
-        printf "CFG_FILE            : %s\n" "${CFG_FILE:-<none>}"
+        printf "TD_STATE_FILE       : %s\n" "${TD_STATE_FILE:-<none>}"
+        printf "TD_CFG_FILE         : %s\n" "${TD_CFG_FILE:-<none>}"
 
         printf -- "Arguments / Flags:\n"
 
         local entry varname
-        for entry in "${ARGS_SPEC[@]:-}"; do
+        for entry in "${TD_ARGS_SPEC[@]:-}"; do
             IFS='|' read -r name short type var help choices <<< "$entry"
             varname="${var}"
             printf "  --%s (-%s) : %s = %s\n" "$name" "$short" "$varname" "${!varname:-<unset>}"
@@ -463,29 +463,33 @@ set -euo pipefail
 
         need_root "$@"
 
-        td_state_load
+        # --- Load previous state and config
+            # enable if desired:
+            td_state_load
+            #td_cfg_load
 
-        td_parse_args "$@"
-        FLAG_DRYRUN="${FLAG_DRYRUN:-0}"   
+        # --- Parse arguments
+            td_parse_args "$@"
+            FLAG_DRYRUN="${FLAG_DRYRUN:-0}"   
 
-        if [[ "${FLAG_VERBOSE:-0}" -eq 1 ]]; then
-            __td_showarguments
-        fi
-
-        __getparameters
-
-                
-        if [[ "${FLAG_UNDEPLOY:-0}" -eq 0 ]]; then
-            __deploy
-            if [[ "$FLAG_LINK_EXES" -eq 1 ]]; then
-                __link_executables
+            if [[ "${FLAG_VERBOSE:-0}" -eq 1 ]]; then
+                __td_showarguments
             fi
-        else
-            __undeploy
-            if [[ "$FLAG_LINK_EXES" -eq 1 ]]; then
-                __unlink_executables
+
+            __getparameters
+
+        # --- Deploy or undeploy                    
+            if [[ "${FLAG_UNDEPLOY:-0}" -eq 0 ]]; then
+                __deploy
+                if [[ "$FLAG_LINK_EXES" -eq 1 ]]; then
+                    __link_executables
+                fi
+            else
+                __undeploy
+                if [[ "$FLAG_LINK_EXES" -eq 1 ]]; then
+                    __unlink_executables
+                fi
             fi
-        fi
     }
 
     main "$@"

@@ -111,14 +111,14 @@
 
     td_cfg_load() {
         local file
-        file="${CFG_FILE}"
+        file="${TD_CFG_FILE}"
         __td_kv_load_file "$file"
     }
 
     td_cfg_set() {
         local key="$1" val="$2"
         local file
-        file="${CFG_FILE}"
+        file="${TD_CFG_FILE}"
         __td_kv_set "$file" "$key" "$val"
         # also update current shell variable to match
         eval "$key=$(printf "%q" "$val")"
@@ -127,14 +127,14 @@
     td_cfg_unset() {
         local key="$1"
         local file
-        file="${CFG_FILE}"
+        file="${TD_CFG_FILE}"
         __td_kv_unset "$file" "$key"
         unset "$key" || true
     }
 
     td_cfg_reset() {
         local file
-        file="${CFG_FILE}"
+        file="${TD_CFG_FILE}"
         __td_kv_reset_file "$file"
     }
 
@@ -142,8 +142,8 @@
 
     td_state_load() {
         local file
-        #saydebug "Loading state from file ${STATE_FILE}"
-        file="${STATE_FILE}"
+        #saydebug "Loading state from file ${TD_STATE_FILE}"
+        file="${TD_STATE_FILE}"
         __td_kv_load_file "$file"
     }
 
@@ -151,7 +151,7 @@
         #saydebug "Setting state key '$1' to '$2' in file ${STATE_FILE}"
         local key="$1" val="$2"
         local file
-        file="${STATE_FILE}"
+        file="${TD_STATE_FILE}"
         __td_kv_set "$file" "$key" "$val"
         eval "$key=$(printf "%q" "$val")"
     }
@@ -159,7 +159,7 @@
     td_state_unset() {
         local key="$1"
         local file
-        file="${STATE_FILE}"
+        file="${TD_STATE_FILE}"
         __td_kv_unset "$file" "$key"
         unset "$key" || true
     }

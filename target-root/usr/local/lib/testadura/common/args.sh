@@ -58,7 +58,7 @@ __td_arg_find_spec() {
     local wanted="$1"
     local spec
 
-    for spec in "${ARGS_SPEC[@]:-}"; do
+    for spec in "${TD_ARGS_SPEC[@]:-}"; do
         __td_arg_split "$spec"
         if [[ "$__td_name" == "$wanted" || "$__td_short" == "$wanted" ]]; then
             printf '%s\n' "$spec"
@@ -75,7 +75,7 @@ __td_arg_find_spec() {
 #   SCRIPT_NAME, SCRIPT_DESC, SCRIPT_EXAMPLES (optional)
 # ----------------------------------------------------------------------------
 td_show_help() {
-    local script_name="${SCRIPT_NAME:-$(basename "${SCRIPT_FILE:-$0}")}"
+    local script_name="${TD_SCRIPT_NAME:-$(basename "${TD_SCRIPT_FILE:-$0}")}"
 
     echo "Usage: $script_name [options] [--] [args...]"
     echo
@@ -84,10 +84,10 @@ td_show_help() {
     echo "Options:"
     echo "  -h, --help           Show this help and exit"
 
-    if declare -p ARGS_SPEC >/dev/null 2>&1; then
+    if declare -p TD_ARGS_SPEC >/dev/null 2>&1; then
         local spec opt meta
 
-        for spec in "${ARGS_SPEC[@]:-}"; do
+        for spec in "${TD_ARGS_SPEC[@]:-}"; do
             __td_arg_split "$spec"
 
             # Skip malformed/empty spec entries
@@ -111,11 +111,11 @@ td_show_help() {
         done
     fi
 
-    if declare -p SCRIPT_EXAMPLES >/dev/null 2>&1; then
+    if declare -p TD_SCRIPT_EXAMPLES >/dev/null 2>&1; then
         echo
         echo "Examples:"
         local ex
-        for ex in "${SCRIPT_EXAMPLES[@]:-}"; do
+        for ex in "${TD_SCRIPT_EXAMPLES[@]:-}"; do
             printf "  %s\n" "$ex"
         done
     fi
@@ -126,12 +126,12 @@ td_show_help() {
 # (idempotent: re-running sets them back to defaults)
 # ----------------------------------------------------------------------------
 __td_arg_init_defaults() {
-    if ! declare -p ARGS_SPEC >/dev/null 2>&1; then
+    if ! declare -p TD_ARGS_SPEC >/dev/null 2>&1; then
         return 0
     fi
 
     local spec
-    for spec in "${ARGS_SPEC[@]:-}"; do
+    for spec in "${TD_ARGS_SPEC[@]:-}"; do
         __td_arg_split "$spec"
         [[ -n "${__td_var:-}" && -n "${__td_type:-}" ]] || continue
 
@@ -183,7 +183,6 @@ td_parse_args() {
     TD_POSITIONAL=()
 
     __td_arg_init_defaults
-
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)
@@ -199,8 +198,8 @@ td_parse_args() {
 
             --*)
                 # Long option
-                if ! declare -p ARGS_SPEC >/dev/null 2>&1; then
-                    echo "Unknown option: $1 (no ARGS_SPEC defined)" >&2
+               if [[ ! -v TD_ARGS_SPEC ]]; then
+                    echo "Unknown option: $1 (no TD_ARGS_SPEC defined)" >&2
                     return 1
                 fi
 
@@ -242,8 +241,8 @@ td_parse_args() {
 
             -?*)
                 # Short option (no clustering; "-abc" is treated as "a bc" not supported)
-                if ! declare -p ARGS_SPEC >/dev/null 2>&1; then
-                    echo "Unknown option: $1 (no ARGS_SPEC defined)" >&2
+                if [[ ! -v TD_ARGS_SPEC ]]; then
+                    echo "Unknown option: $1 (no TD_ARGS_SPEC defined)" >&2
                     return 1
                 fi
 
