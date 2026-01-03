@@ -130,11 +130,6 @@ set -euo pipefail
     )
 
 # --- local script functions ---------------------------------------------------
-    __display_summary()
-    {
-        sayinfo "Project name   : $PROJECT_NAME"
-        sayinfo "Project folder : $PROJECT_FOLDER"
-    }
     __resolve_project_settings()
     {
         local template_dir slug default_name default_folder default_template base
@@ -166,7 +161,9 @@ set -euo pipefail
                    PROJECT_FOLDER="$(pwd)/$PROJECT_FOLDER"
                 fi
 
-                __display_summary
+                 sayinfo "Project name   : $PROJECT_NAME"
+                sayinfo "Project folder : $PROJECT_FOLDER"
+
                 if ask_ok_redo_quit "Proceed with these settings?"; then
                     # OK (0)
                     return 0
