@@ -1,0 +1,8 @@
+releases/
+.env
+.config/
+.cache/
+.vscode/
+.idea/
+.hidden-folder/
+.DS_Store
